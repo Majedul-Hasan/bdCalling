@@ -4,7 +4,11 @@ const roleMiddleware = (allowedRoles) => {
 
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({
-        message: 'Forbidden: You do not have access to this resource',
+        success: false,
+        message: 'Unauthorized access.',
+        errorDetails: `You must be an ${
+          allowedRoles[0] === 'admin' ? 'ADMIN' : allowedRoles[0]
+        } to perform this action.`,
       });
     }
 
