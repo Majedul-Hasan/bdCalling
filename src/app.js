@@ -7,7 +7,12 @@ const { Database } = require('./config/db');
 const cors = require('cors');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-const { authRoutes, adminRoutes, traineeRoutes } = require('./routes');
+const {
+  authRoutes,
+  adminRoutes,
+  traineeRoutes,
+  trainerRouter,
+} = require('./routes');
 const { authMiddleware } = require('./middlewares/authMiddleware');
 const { roleMiddleware } = require('./middlewares/roleMiddleware ');
 
@@ -26,6 +31,12 @@ app.use(
   authMiddleware,
   roleMiddleware(['trainee']),
   traineeRoutes
+);
+app.use(
+  '/api/trainer',
+  authMiddleware,
+  roleMiddleware(['trainer']),
+  trainerRouter
 );
 app.use('/api/admin', authMiddleware, roleMiddleware(['admin']), adminRoutes);
 

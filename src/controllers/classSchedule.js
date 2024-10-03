@@ -107,4 +107,48 @@ const bookClassSchedule = async (req, res) => {
   }
 };
 
-module.exports = { createClassSchedule, bookClassSchedule };
+//  /api/trainer
+const viewTrainerSchedules = async (req, res) => {
+  try {
+    const loggedInUser = req.user; // Assuming the logged-in user is set in req.user from authentication middleware
+
+    // Ensure the logged-in user is a Trainer
+    if (!loggedInUser || loggedInUser.role !== 'trainer') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only trainers can view their assigned class schedules',
+      });
+    }
+
+    // Find all class schedules assigned to this trainer
+    const assignedSchedules = await ClassSchedule.find({
+      trainer: loggedInUser.userId,
+    });
+
+    if (!assignedSchedules || assignedSchedules.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No class schedules found',
+      });
+    }
+
+    // Return the list of schedules assigned to the trainer
+    res.status(200).json({
+      success: true,
+      message: 'Assigned class schedules retrieved successfully',
+      schedules: assignedSchedules,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving class schedules',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createClassSchedule,
+  bookClassSchedule,
+  viewTrainerSchedules,
+};
