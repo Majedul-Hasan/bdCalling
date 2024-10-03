@@ -1,0 +1,7 @@
+PORT = 5001
+MONGODB_CONNECTION_STRING= mongodb+srv://hasan:5y8zMfE9SBDsrM3@bd-calling.ng2kc.mongodb.net/bd-calling?retryWrites=true&w=majority&appName=bd-calling
+
+
+JWT_SECRET = 3fa6195ef8eb577c3e58c489bd6791b5f01cec027c7aaa7e4f5035d593a284369b62966dd89a32
+2e923d01f50314c878cf386d1bcfaf36819541008990fc2f84
+
