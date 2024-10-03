@@ -46,4 +46,65 @@ const createClassSchedule = async (req, res) => {
       .json({ message: 'Error scheduling class', error: error.message });
   }
 };
-module.exports = { createClassSchedule };
+
+// trainee privet
+const bookClassSchedule = async (req, res) => {
+  try {
+    const { classId } = req.body;
+    const loggedInUser = req.user;
+    console.log(loggedInUser);
+
+    // Ensure the logged-in user is a Trainee
+    if (!loggedInUser || loggedInUser.role !== 'trainee') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only trainees can book a class',
+      });
+    }
+
+    const classSchedule = await ClassSchedule.findById(classId);
+    if (!classSchedule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Class schedule not found',
+      });
+    }
+
+    console.log(classSchedule);
+    // Check if the class is fully booked (max 10 trainees)
+    if (classSchedule?.trainees?.length >= 10) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Class schedule is full. Maximum 10 trainees allowed per schedule.',
+      });
+    }
+
+    // Ensure the trainee has not already booked the class
+    const alreadyBooked = classSchedule.trainees.includes(loggedInUser.userId);
+    if (alreadyBooked) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already booked this class',
+      });
+    }
+    classSchedule.trainees.push(loggedInUser.userId);
+
+    // Save the updated class schedule
+    await classSchedule.save();
+    // Save the updated class schedule
+    res.status(201).json({
+      success: true,
+      message: 'Class booked successfully',
+      Data: classSchedule,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error booking class',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { createClassSchedule, bookClassSchedule };
