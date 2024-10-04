@@ -152,15 +152,7 @@ const cancelClassSchedule = async (req, res) => {
   try {
     const { classId } = req.body;
     const loggedInUser = req.user;
-    /**
-  
-    if (!loggedInUser || loggedInUser.role !== 'trainee') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only trainees can cancel a class booking',
-      });
-    }
- */
+
     // Find the class schedule by classId
     const classSchedule = await ClassSchedule.findById(classId);
     if (!classSchedule) {

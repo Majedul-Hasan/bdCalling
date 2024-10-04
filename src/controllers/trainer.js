@@ -23,14 +23,18 @@ const createTrainer = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: 'User with this email already exists' });
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
     }
 
     // Validate required fields
     if (!name || !email || !password || !expertise || !yearsOfExperience) {
-      return res.status(400).json({ message: 'Required fields are missing' });
+      return res.status(400).json({
+        success: false,
+        message: 'Required fields are missing',
+      });
     }
 
     // Hash the password before saving
@@ -54,12 +58,15 @@ const createTrainer = async (req, res) => {
 
     // Return success response
     res.status(201).json({
+      success: true,
       message: 'Trainer created successfully',
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error creating trainer', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error creating trainer',
+      errorDetails: error.message,
+    });
   }
 };
 
