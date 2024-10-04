@@ -1,4 +1,7 @@
 const ClassSchedule = require('../models/ClassSchedule.module');
+
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/User.model');
 
 const getTraineeClasses = async (req, res) => {
@@ -67,9 +70,8 @@ const updateMyProfile2 = async (req, res) => {
     const loggedInUser = req.user;
     const { name, phone } = req.body;
 
-    // If there's a profile picture uploaded, use its path
-    let profilePicture = req.file ? req.file.path : undefined;
-    console.log(profilePicture);
+    // If there's a profile picture uploaded, use only its file name
+    let profilePicture = req.file ? req.file.filename : undefined;
 
     // Create an object to hold the updates
     const updateData = {};
@@ -104,13 +106,47 @@ const updateMyProfile2 = async (req, res) => {
     });
   }
 };
+
 const updateMyProfile = async (req, res) => {
   try {
     const loggedInUser = req.user;
     const { name, phone } = req.body;
 
-    // If there's a profile picture uploaded, use only its file name
+    // Find the user's existing profile
+    const existingUser = await User.findById(loggedInUser.userId);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // If there's a new profile picture uploaded, delete the previous one
     let profilePicture = req.file ? req.file.filename : undefined;
+
+    if (profilePicture && existingUser.profilePicture) {
+      // Construct the file path for the old profile picture
+      const oldProfilePicPath = path.join(
+        __dirname,
+        '..',
+        '..',
+        'public',
+        'uploads',
+        existingUser.profilePicture
+      );
+
+      //   console.log('first', oldProfilePicPath);
+
+      // Check if the old file exists and delete it
+      if (fs.existsSync(oldProfilePicPath)) {
+        fs.unlink(oldProfilePicPath, (err) => {
+          if (err) {
+            console.error('Error deleting old profile picture:', err);
+          }
+        });
+      }
+    }
 
     // Create an object to hold the updates
     const updateData = {};
@@ -124,13 +160,6 @@ const updateMyProfile = async (req, res) => {
       updateData,
       { new: true, runValidators: true, select: '-password' }
     );
-
-    if (!updatedProfile) {
-      return res.status(404).json({
-        success: false,
-        message: 'Profile not found',
-      });
-    }
 
     res.status(200).json({
       success: true,
