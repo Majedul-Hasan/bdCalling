@@ -1,22 +1,33 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/User.model');
 const { signJwt } = require('../middlewares/jwtMiddleware');
-// Register Controller
-const register = async (req, res) => {
+const AppError = require('../middlewares/AppError');
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return next(new AppError('User already exists', 400));
     }
 
     // Validate required fields
     if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: 'Name, email, and password are required' });
+      return next(new AppError('Name, email, and password are required', 400));
+    }
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error occurred.',
+        errorDetails: {
+          field: 'email',
+          message: 'Invalid email format.',
+        },
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -28,10 +39,11 @@ const register = async (req, res) => {
       phone,
       role: 'trainee',
     });
+
     const savedUser = await newUser.save();
-    // console.log(savedUser);
 
     const token = signJwt(savedUser._id, savedUser.role);
+
     // Return token and user info
     res.status(201).json({
       message: 'User registered successfully',
@@ -46,32 +58,39 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error registering user', error: error.message });
+    next(error); // Forward any errors to the global error handler
   }
 };
-// Login Controller
-const login = async (req, res) => {
+
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     // Validate input
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: 'Email and password are required' });
+      return next(new AppError('Email and password are required', 400));
+    }
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error occurred.',
+        errorDetails: {
+          field: 'email',
+          message: 'Invalid email format.',
+        },
+      });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return next(new AppError('Invalid email or password', 401));
     }
 
     // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return next(new AppError('Invalid email or password', 401));
     }
 
     // Generate JWT token
@@ -91,7 +110,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+    next(error); // Forward any errors to the global error handler
   }
 };
 
