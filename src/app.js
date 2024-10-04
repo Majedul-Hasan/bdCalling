@@ -15,6 +15,7 @@ const {
 } = require('./routes');
 const { authMiddleware } = require('./middlewares/authMiddleware');
 const { roleMiddleware } = require('./middlewares/roleMiddleware ');
+const globalErrorHandler = require('./middlewares/globalErrorHandler');
 
 const app = express();
 
@@ -43,4 +44,5 @@ app.use('/api/admin', authMiddleware, roleMiddleware(['admin']), adminRoutes);
 app.get('/', (req, res) => {
   res.send('thanks visiting us');
 });
+app.use(globalErrorHandler);
 module.exports = app;
