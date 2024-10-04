@@ -147,8 +147,63 @@ const viewTrainerSchedules = async (req, res) => {
   }
 };
 
+// trainee privet
+const cancelClassSchedule = async (req, res) => {
+  try {
+    const { classId } = req.body;
+    const loggedInUser = req.user;
+    /**
+  
+    if (!loggedInUser || loggedInUser.role !== 'trainee') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only trainees can cancel a class booking',
+      });
+    }
+ */
+    // Find the class schedule by classId
+    const classSchedule = await ClassSchedule.findById(classId);
+    if (!classSchedule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Class schedule not found',
+      });
+    }
+
+    // Ensure the trainee has already booked the class
+    const isBooked = classSchedule.trainees.includes(loggedInUser.userId);
+    if (!isBooked) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have not booked this class',
+      });
+    }
+
+    // Remove the trainee's ID from the class schedule
+    classSchedule.trainees = classSchedule.trainees.filter(
+      (traineeId) => traineeId.toString() !== loggedInUser.userId.toString()
+    );
+
+    // Save the updated class schedule
+    await classSchedule.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Class booking canceled successfully',
+      classSchedule,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error canceling class booking',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createClassSchedule,
   bookClassSchedule,
   viewTrainerSchedules,
+  cancelClassSchedule,
 };
