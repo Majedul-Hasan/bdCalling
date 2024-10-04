@@ -14,7 +14,7 @@ const { uploadProfilePicture } = require('../middlewares/uploadProfilePicture');
 const traineeRouter = express.Router();
 
 // ** /api/trainee
-traineeRouter.post('/update-my-profile', uploadProfilePicture, updateMyProfile);
+traineeRouter.put('/update-my-profile', uploadProfilePicture, updateMyProfile);
 traineeRouter.get('/my-profile', getMyProfile);
 traineeRouter.get('/my-class', getTraineeClasses);
 traineeRouter.post('/book-class-schedule', bookClassSchedule);
