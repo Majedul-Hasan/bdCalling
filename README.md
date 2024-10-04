@@ -268,6 +268,10 @@ module.exports = Trainer;
 ```
 ---
 
+#### Relation Diagram
+
+ [UML diagram](https://raw.githubusercontent.com/Majedul-Hasan/bdCalling/refs/heads/master/public/umldi.png)
+
 
 
 ### Key Features to Test
@@ -288,8 +292,35 @@ input formate
   "availableDays": ["Monday", "Wednesday", "Friday"]
 }
 ```
+#### Admin Credentials
+```json 
+"email": "admin@gmail.com"
+"password": "123456"
+
+```
+
 
 
 
 - **Schedule Classes**: Log in as an admin and create new classes using the `/api/admin/create-class-schedule` endpoint.
+
+input formate
+
+   ```JSON
+{
+    "trainerId": "66ffc6f89026bca6a468b593",
+    "classDate": "2024-10-17",
+    "timeSlot":  "06:00 PM - 08:00 PM"
+
+}
+```
+
 - **Booking Classes**: Log in as a member, browse available classes, and book one using the `/api/trainee/book-class-schedule` endpoint.
+
+input formate
+
+   ```JSON
+  {
+"classId" : "66ffdd14643d630c46a85be9"
+}
+```
