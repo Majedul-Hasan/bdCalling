@@ -62,4 +62,88 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-module.exports = { getTraineeClasses, getMyProfile };
+const updateMyProfile2 = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { name, phone } = req.body;
+
+    // If there's a profile picture uploaded, use its path
+    let profilePicture = req.file ? req.file.path : undefined;
+    console.log(profilePicture);
+
+    // Create an object to hold the updates
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (profilePicture) updateData.profilePicture = profilePicture;
+
+    // Update the trainee's profile
+    const updatedProfile = await User.findByIdAndUpdate(
+      loggedInUser.userId,
+      updateData,
+      { new: true, runValidators: true, select: '-password' }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating profile',
+      error: error.message,
+    });
+  }
+};
+const updateMyProfile = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { name, phone } = req.body;
+
+    // If there's a profile picture uploaded, use only its file name
+    let profilePicture = req.file ? req.file.filename : undefined;
+
+    // Create an object to hold the updates
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (profilePicture) updateData.profilePicture = profilePicture;
+
+    // Update the trainee's profile
+    const updatedProfile = await User.findByIdAndUpdate(
+      loggedInUser.userId,
+      updateData,
+      { new: true, runValidators: true, select: '-password' }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating profile',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { getTraineeClasses, getMyProfile, updateMyProfile };
