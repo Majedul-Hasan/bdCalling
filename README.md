@@ -131,9 +131,143 @@ Access the API documentation at [api docs](https://documenter.getpostman.com/vie
 
 ## Live Hosting Link
 
-Live Link 
+Live Link   [LIVE LINK](https://bdcallinggym.vercel.app/)
 
 ---
+
+### Database Schema
+
+**User.model.js**
+```JavaScript
+//User.model.js
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+const userSchema = new Schema(
+  {
+    name: {
+      required: true,
+      type: String,
+    },
+    password: {
+      required: true,
+      type: String,
+    },
+    email: {
+      required: true,
+      type: String,
+      unique: true,
+    },
+    phone: {
+      required: false,
+      type: String,
+    },
+
+    role: {
+      type: String,
+      enum: ['admin', 'trainer', 'trainee'],
+      default: 'user',
+      required: true,
+    },
+    profilePicture: {
+      required: false,
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
+
+const User = mongoose.models.User ?? mongoose.model('User', userSchema);
+
+module.exports = User;
+
+ ```
+
+---
+**ClassSchedule.module.js**
+
+```JavaScript 
+//ClassSchedule.module.js
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+// Define the available time slots for the classes
+const availableTimeSlots = [
+  '08:15 AM - 10:15 AM',
+  '10:30 AM - 12:30 PM',
+  '01:30 PM - 03:30 PM', // 60-minute lunch break
+  '03:45 PM - 05:45 PM',
+  '06:00 PM - 08:00 PM',
+];
+
+// Class Schedule Schema
+const classScheduleSchema = new Schema({
+  trainer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trainer',
+    required: true,
+  },
+  trainees: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  classDate: {
+    type: Date,
+    required: true,
+  },
+  timeSlot: {
+    type: String,
+    enum: availableTimeSlots, // Restrict to predefined time slots
+    required: true,
+  },
+  maxTrainees: {
+    type: Number,
+    default: 10, // Maximum of 10 trainees per class
+  },
+});
+
+module.exports = mongoose.model('ClassSchedule', classScheduleSchema); 
+```
+
+---
+
+**Trainer.model.js**
+```javascript 
+// Trainer.model.js
+const mongoose = require('mongoose');
+const User = require('./User.model');
+const { Schema } = mongoose;
+
+// Trainer Schema (inherits from User)
+const trainerSchema = new Schema({
+  expertise: {
+    type: String,
+    required: true,
+  },
+  certifications: [
+    {
+      type: String,
+      required: false,
+    },
+  ],
+  yearsOfExperience: {
+    type: Number,
+    required: true,
+  },
+  availableDays: {
+    type: [String],
+  },
+});
+
+const Trainer = User.discriminator('Trainer', trainerSchema);
+
+module.exports = Trainer;
+
+```
+---
+
 
 
 ### Key Features to Test
