@@ -4,6 +4,7 @@ const Trainer = require('../models/Trainer.model');
 
 const fs = require('fs');
 const path = require('path');
+const ClassSchedule = require('../models/ClassSchedule.module');
 
 // Create Trainer Controller
 const createTrainer = async (req, res) => {
@@ -158,4 +159,91 @@ const updateTrainer = async (req, res) => {
   }
 };
 
-module.exports = { createTrainer, updateTrainer };
+const deleteTrainer = async (req, res) => {
+  try {
+    const { trainerId } = req.params;
+    const newTrainerId = req.query.newTrainerId; // Expecting new trainer ID from query string
+
+    // Find the trainer by their ID
+    const trainer = await Trainer.findById(trainerId);
+    if (!trainer || trainer.role !== 'trainer') {
+      return res.status(404).json({
+        success: false,
+        message: 'Trainer not found',
+      });
+    }
+
+    // Check if the trainer has any classes scheduled
+    const classes = await ClassSchedule.find({ trainer: trainerId });
+    if (classes.length === 0) {
+      // No classes scheduled, proceed to delete
+      await deleteTrainerAndProfilePic(trainer);
+      await Trainer.findByIdAndDelete(trainerId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Trainer deleted successfully',
+      });
+    } else {
+      // Replace trainer ID in class schedules with new trainer ID if provided
+      if (!newTrainerId) {
+        return res.status(400).json({
+          success: false,
+          message: 'A new trainer ID must be provided to replace the classes.',
+        });
+      }
+
+      // Check if the new trainer ID is valid and exists
+      const newTrainer = await Trainer.findById(newTrainerId);
+      if (!newTrainer || newTrainer.role !== 'trainer') {
+        return res.status(404).json({
+          success: false,
+          message: 'New trainer not found',
+        });
+      }
+
+      // Update classes to the new trainer
+      await ClassSchedule.updateMany(
+        { trainer: trainerId },
+        { trainer: newTrainerId }
+      );
+
+      // Delete the original trainer and their profile picture
+      await deleteTrainerAndProfilePic(trainer);
+      await Trainer.findByIdAndDelete(trainerId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Trainer deleted and classes reassigned successfully',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting trainer',
+      error: error.message,
+    });
+  }
+};
+
+const deleteTrainerAndProfilePic = async (user) => {
+  // If the trainer has a profile picture, delete the old file from the server
+  if (user.profilePicture) {
+    const profilePicPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'public',
+      'uploads',
+      user.profilePicture
+    );
+    if (fs.existsSync(profilePicPath)) {
+      fs.unlink(profilePicPath, (err) => {
+        if (err) {
+          console.error('Error deleting profile picture:', err);
+        }
+      });
+    }
+  }
+};
+module.exports = { createTrainer, updateTrainer, deleteTrainer };
