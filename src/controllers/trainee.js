@@ -1,4 +1,5 @@
 const ClassSchedule = require('../models/ClassSchedule.module');
+const User = require('../models/User.model');
 
 const getTraineeClasses = async (req, res) => {
   try {
@@ -31,4 +32,34 @@ const getTraineeClasses = async (req, res) => {
   }
 };
 
-module.exports = { getTraineeClasses };
+const getMyProfile = async (req, res) => {
+  try {
+    const loggedInUser = req.user; // Assuming req.user is populated with authenticated user details
+
+    // Fetch the user's profile by their ID
+    const traineeProfile = await User.findById(loggedInUser.userId).select(
+      '-password'
+    );
+
+    if (!traineeProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'profile not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'profile fetched successfully',
+      profile: traineeProfile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching profile',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { getTraineeClasses, getMyProfile };
